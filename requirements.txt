@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+pydub
+librosa
+soundfile
+numpy
+torch
+torchaudio
+demucs
+celery
+redis
+ffmpeg-python
