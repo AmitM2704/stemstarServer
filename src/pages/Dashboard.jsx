@@ -39,7 +39,7 @@ export default function Dashboard() {
     useEffect(() => {
 
     const ws = new WebSocket(
-        "ws://127.0.0.1:8000/ws/progress"
+        "wss://stemstarserver-81vf.onrender.com/ws/progress"
     )
     ws.onerror = (error) => {
 
