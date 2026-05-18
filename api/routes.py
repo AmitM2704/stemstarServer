@@ -172,7 +172,7 @@ async def websocket_progress(
             # Stem directory
             stem_dir = os.path.join(
                 "separated",
-                "htdemucs",
+                "mdx_extra_q",
                 song_name
             )
 
