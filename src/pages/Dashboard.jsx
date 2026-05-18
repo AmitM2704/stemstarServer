@@ -41,6 +41,14 @@ export default function Dashboard() {
     const ws = new WebSocket(
         "wss://stemstarserver-81vf.onrender.com/ws/progress"
     )
+        setInterval(() => {
+
+    if (ws.readyState === WebSocket.OPEN) {
+
+        ws.send("ping");
+    }
+
+    }, 15000);
     ws.onerror = (error) => {
 
     console.error(
