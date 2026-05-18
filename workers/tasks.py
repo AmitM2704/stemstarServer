@@ -3,7 +3,10 @@ from celery import Celery
 
 from models.ensemble import EnsembleSeparator
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+REDIS_URL = os.getenv(
+    "REDIS_URL",
+    "redis://localhost:6379/0"
+)
 
 celery = Celery(
     "stemstar_tasks",
