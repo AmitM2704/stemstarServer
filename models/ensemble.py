@@ -1,5 +1,5 @@
-from app.models.demucs_model import DemucsSeparator
-from app.models.mdx_model import MDXSeparator
+from models.demucs_model import DemucsSeparator
+from models.mdx_model import MDXSeparator
 
 
 class EnsembleSeparator:
