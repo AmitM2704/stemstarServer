@@ -190,7 +190,7 @@ async def websocket_progress(
                         "name": stem_file,
 
                         "url":
-                        f"http://127.0.0.1:8000/stems/{song_name}/{stem_file}"
+                        f"https://stemstarserver-81vf.onrender.com//stems/{song_name}/{stem_file}"
                     })
 
             # Send final websocket JSON
