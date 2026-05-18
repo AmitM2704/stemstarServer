@@ -5,7 +5,8 @@ import traceback
 import asyncio
 
 from fastapi import HTTPException
-
+from celery.result import AsyncResult
+from workers.tasks import celery
 
 from fastapi import APIRouter
 from fastapi import UploadFile
@@ -50,6 +51,20 @@ async def login(data: dict = Body(...)):
         status_code=401,
         detail="Invalid credentials"
     )
+
+
+
+
+@router.get("/task/{task_id}")
+def get_task(task_id: str):
+
+    task = AsyncResult(task_id, app=celery)
+
+    return {
+        "id": task.id,
+        "status": task.status,
+        "result": task.result,
+    }
 
 @router.get("/")
 def home():
