@@ -126,6 +126,10 @@ async def websocket_progress(
             process = subprocess.Popen(
                 [
                     "demucs",
+                    "--device",
+                    "cpu",
+                    "--two-stems",
+                    "vocals",
                     save_path
                 ],
                 stdout=subprocess.PIPE,
