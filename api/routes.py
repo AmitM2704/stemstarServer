@@ -131,18 +131,14 @@ async def websocket_progress(
 
             # Start Demucs
             process = subprocess.Popen(
-                [
-                    "demucs",
-                    "--device",
-                    "cpu",
-                    "--two-stems",
-                    "vocals",
-                    save_path
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True
-            )
+    [
+        "demucs",
+        "-n",
+        "mdx_extra_q",
+        "--device",
+        "cpu",
+        save_path
+    ],)
 
         # Stream realtime logs
             while process.poll() is None:
