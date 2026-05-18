@@ -1,21 +1,19 @@
 import os
-import subprocess
-import time
-import traceback
-import asyncio
 
 from fastapi import HTTPException
-from celery.result import AsyncResult
-from workers.tasks import celery
-
 from fastapi import APIRouter
 from fastapi import UploadFile
 from fastapi import File
 from fastapi import Body
-from fastapi import WebSocket
 
 from fastapi.responses import FileResponse
 
+from celery.result import AsyncResult
+
+from workers.tasks import (
+    celery,
+    separate_song
+)
 
 router = APIRouter()
 
@@ -25,10 +23,6 @@ os.makedirs(
     UPLOAD_DIR,
     exist_ok=True
 )
-
-
-# Store uploaded files temporarily
-uploaded_files = {}
 
 
 @router.post("/login")
@@ -53,25 +47,11 @@ async def login(data: dict = Body(...)):
     )
 
 
-
-
-@router.get("/task/{task_id}")
-def get_task(task_id: str):
-
-    task = AsyncResult(task_id, app=celery)
-
-    return {
-        "id": task.id,
-        "status": task.status,
-        "result": task.result,
-    }
-
 @router.get("/")
 def home():
 
     return {
-        "message":
-        "API working"
+        "message": "API working"
     }
 
 
@@ -93,148 +73,32 @@ async def upload_audio(
             await file.read()
         )
 
-    # Store file path
-    uploaded_files[
-        file.filename
-    ] = save_path
+    # Queue Celery task
+    job = separate_song.delay(save_path)
 
     return {
-        "status": "uploaded",
+        "status": "queued",
+        "task_id": job.id,
         "filename": file.filename
     }
 
 
-# WebSocket for realtime progress
-@router.websocket("/ws/progress")
-async def websocket_progress(
-    websocket: WebSocket
-):
+# Check task status
+@router.get("/task/{task_id}")
+def get_task(task_id: str):
 
-    await websocket.accept()
+    task = AsyncResult(
+        task_id,
+        app=celery
+    )
 
-    print("WebSocket connected")
+    return {
+        "id": task.id,
+        "status": task.status,
+        "result": task.result,
+    }
 
-    try:
 
-        while True:
-
-            # Receive filename
-            filename = await websocket.receive_text()
-            if filename == "ping":
-
-                await websocket.send_text("pong")
-
-                continue
-
-            print("Received:", filename)
-
-            save_path = uploaded_files.get(
-                filename
-            )
-
-            if not save_path:
-
-                await websocket.send_text(
-                    "FILE_NOT_FOUND"
-                )
-
-                continue
-
-            print(
-                "Starting Demucs..."
-            )
-
-            # Start Demucs
-            process = subprocess.Popen(
-            [
-                "demucs",
-                "-n",
-                "mdx_extra_q",
-                "--device",
-                "cpu",
-                save_path
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True
-        )
-
-        # Stream realtime logs
-            while process.poll() is None:
-
-                line = process.stdout.readline()
-
-                if line:
-
-                    line = line.strip()
-
-                    print(line)
-
-                    await websocket.send_text(line)
-
-                await asyncio.sleep(0.1)
-
-            await asyncio.to_thread(
-                process.wait
-            )
-
-            print(
-                "Demucs complete"
-            )
-
-            await asyncio.sleep(1)
-            # Song name
-            song_name = os.path.splitext(
-                filename
-            )[0]
-
-            # Stem directory
-            stem_dir = os.path.join(
-                "separated",
-                "mdx_extra_q",
-                song_name
-            )
-
-            print(
-                "Stem dir:",
-                stem_dir
-            )
-
-            stems = []
-
-            # Read generated stems
-            if os.path.exists(stem_dir):
-
-                for stem_file in os.listdir(stem_dir):
-
-                    stems.append({
-
-                        "name": stem_file,
-
-                        "url":
-                        f"https://stemstarserver-81vf.onrender.com//stems/{song_name}/{stem_file}"
-                    })
-
-            # Send final websocket JSON
-            await websocket.send_json({
-
-                "type": "complete",
-
-                "stems": stems
-            })
-
-    except Exception as e:
-
-        print(
-            "WebSocket Error:",
-            e
-        )
-        traceback.print_exc()
-    finally:
-
-        print(
-            "WebSocket disconnected"
-        )
 # Serve stem files
 @router.get(
     "/stems/{song}/{stem_name}"
@@ -246,7 +110,7 @@ async def get_stem(
 
     file_path = os.path.join(
         "separated",
-        "htdemucs",
+        "mdx_extra_q",
         song,
         stem_name
     )
