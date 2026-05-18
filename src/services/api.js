@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-    baseURL: "https://stemstarserver-81vf.onrender.com/"
+    baseURL: "stemstarserver-production.up.railway.app/"
 })
 
 export default api

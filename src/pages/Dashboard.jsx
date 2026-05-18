@@ -39,7 +39,8 @@ export default function Dashboard() {
     useEffect(() => {
 
     const ws = new WebSocket(
-        "wss://stemstarserver-81vf.onrender.com/ws/progress"
+          "wss://your-railway-app.up.railway.app/ws/progress"
+
     )
         setInterval(() => {
 
