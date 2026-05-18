@@ -1,7 +1,10 @@
 import os
+
 from celery import Celery
 
-from models.ensemble import EnsembleSeparator
+from models.ensemble import (
+    EnsembleSeparator
+)
 
 REDIS_URL = os.getenv(
     "REDIS_URL",
@@ -14,23 +17,28 @@ celery = Celery(
     backend=REDIS_URL,
 )
 
-separator = EnsembleSeparator()
-
 
 @celery.task(bind=True)
-def separate_song(self, file_path):
+def separate_song(
+    self,
+    file_path
+):
 
     try:
-        result = separator.process(file_path)
 
-        return {
-            "status": "completed",
-            "result": result,
-        }
+        # Load model inside worker
+        separator =
+        EnsembleSeparator()
+
+        result =
+        separator.process(
+            file_path
+        )
+
+        return result
 
     except Exception as e:
 
         return {
-            "status": "failed",
-            "error": str(e),
+            "error": str(e)
         }
