@@ -27,11 +27,9 @@ def separate_song(
     try:
 
         # Load model inside worker
-        separator =
-        EnsembleSeparator()
+        separator = EnsembleSeparator()
 
-        result =
-        separator.process(
+        result = separator.process(
             file_path
         )
 
