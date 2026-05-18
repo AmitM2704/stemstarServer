@@ -5,6 +5,7 @@ uvicorn
 python-multipart
 pydub
 librosa
+websockets
 soundfile
 numpy
 demucs
