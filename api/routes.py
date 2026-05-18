@@ -2,6 +2,9 @@ import os
 import subprocess
 import time
 
+from fastapi import HTTPException
+
+
 from fastapi import APIRouter
 from fastapi import UploadFile
 from fastapi import File
@@ -26,9 +29,7 @@ uploaded_files = {}
 
 
 @router.post("/login")
-async def login(
-    data: dict = Body(...)
-):
+async def login(data: dict = Body(...)):
 
     email = data.get("email")
     password = data.get("password")
@@ -40,15 +41,13 @@ async def login(
     ):
 
         return {
-            "access_token":
-            "fake_token"
+            "access_token": "fake_token"
         }
 
-    return {
-        "error":
-        "Invalid credentials"
-    }
-
+    raise HTTPException(
+        status_code=401,
+        detail="Invalid credentials"
+    )
 
 @router.get("/")
 def home():
