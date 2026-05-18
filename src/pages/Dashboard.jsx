@@ -36,122 +36,122 @@ export default function Dashboard() {
     useState(false)
     const [progressText, setProgressText] =
     useState("")
-    useEffect(() => {
+//     useEffect(() => {
 
-    const ws = new WebSocket(
-          "wss://your-railway-app.up.railway.app/ws/progress"
+//     const ws = new WebSocket(
+//           "wss://stemstarserver-production.up.railway.app/ws/progress"
 
-    )
-        setInterval(() => {
+//     )
+//         setInterval(() => {
 
-    if (ws.readyState === WebSocket.OPEN) {
+//     if (ws.readyState === WebSocket.OPEN) {
 
-        ws.send("ping");
-    }
+//         ws.send("ping");
+//     }
 
-    }, 15000);
-    ws.onerror = (error) => {
+//     }, 15000);
+//     ws.onerror = (error) => {
 
-    console.error(
-        "WebSocket error",
-        error
-    )
-}   
-    ws.onopen = () => {
+//     console.error(
+//         "WebSocket error",
+//         error
+//     )
+// }   
+//     ws.onopen = () => {
 
-    console.log(
-        "WebSocket connected"
-    )
-    //alert("ready for upload")
+//     console.log(
+//         "WebSocket connected"
+//     )
+//     //alert("ready for upload")
 
-    setConnected(true)
+//     setConnected(true)
 
-    setErrorMessage("")
-}
-    ws.onclose = () => {
+//     setErrorMessage("")
+// }
+//     ws.onclose = () => {
 
-    console.log(
-        "WebSocket disconnected"
-    )
-    setTimeout(() => {
+//     console.log(
+//         "WebSocket disconnected"
+//     )
+//     setTimeout(() => {
 
-    //window.location.reload()
+//     //window.location.reload()
 
-}, 2000)
-}
+// }, 2000)
+// }
 
-ws.onmessage = (event) => {
+// ws.onmessage = (event) => {
 
-    console.log("WS:", event.data)
+//     console.log("WS:", event.data)
 
-    // Try JSON first
-    try {
+//     // Try JSON first
+//     try {
 
-        const data =
-            JSON.parse(event.data)
+//         const data =
+//             JSON.parse(event.data)
 
-        // Completion message
-        if (
-            data.type === "complete"
-        ) {
+//         // Completion message
+//         if (
+//             data.type === "complete"
+//         ) {
 
-            console.log(
-                "Received stems:",
-                data.stems
-            )
+//             console.log(
+//                 "Received stems:",
+//                 data.stems
+//             )
 
-            setTimeout(() => {
+//             setTimeout(() => {
 
-                setStems(data.stems)
+//                 setStems(data.stems)
 
-                localStorage.setItem(
-                    "stems",
-                    JSON.stringify(data.stems)
-                )
+//                 localStorage.setItem(
+//                     "stems",
+//                     JSON.stringify(data.stems)
+//                 )
 
-                setProgress(100)
+//                 setProgress(100)
 
-                setProgressText(
-                    "Completed"
-                )
+//                 setProgressText(
+//                     "Completed"
+//                 )
 
-                setUploading(false)
+//                 setUploading(false)
 
-            }, 1000)
-        }
+//             }, 1000)
+//         }
 
-        return
+//         return
 
-    } catch {
+//     } catch {
 
-        // NOT JSON
-        // so it's a Demucs log line
-    }
+//         // NOT JSON
+//         // so it's a Demucs log line
+//     }
 
-    // Show processing logs
-    setProgressText(
-        event.data
-    )
+//     // Show processing logs
+//     setProgressText(
+//         event.data
+//     )
 
-    // Parse REAL %
-    const match =
-        event.data.match(/^(\d+)%/)
+//     // Parse REAL %
+//     const match =
+//         event.data.match(/^(\d+)%/)
 
-    if (match) {
+//     if (match) {
 
-        setProgress(
-            Number(match[1])
-        )
-    }
-}
-    setSocket(ws)
+//         setProgress(
+//             Number(match[1])
+//         )
+//     }
+// }
+//     setSocket(ws)
 
-    return () => {
+//     return () => {
 
-        ws.close()
-    }
+//         ws.close()
+//     }
 
-}, [])
+// }, [])
 useEffect(() => {
 
     const savedStems =
@@ -182,15 +182,14 @@ useEffect(() => {
             "bass.wav",
             "other.wav"
         ]
+            const generated =
+                stemNames.map((stem) => ({
 
-        const generated =
-            stemNames.map((stem) => ({
+                    name: stem,
 
-                name: stem,
-
-                url:
-                `http://127.0.0.1:8000/stems/${songName}/${stem}`
-            }))
+                    url:
+                    `https://stemstarserver-production.up.railway.app/stems/${songName}/${stem}`
+                }))
 
         setStems(generated)
 
@@ -207,21 +206,23 @@ useEffect(() => {
 }
 
     async function handleUpload() {
-        
+
     if (!file) {
         return
     }
-    setUploadedFilename(
-    file.name
-)
+
+    setUploadedFilename(file.name)
 
     try {
 
         setUploading(true)
+
         setProgressText(
-    "Preparing upload..."
-)
-        setProgress(0)
+            "Uploading..."
+        )
+
+        setProgress(10)
+
         setStems([])
 
         const formData = new FormData()
@@ -241,49 +242,128 @@ useEffect(() => {
                 }
             }
         )
+
+        const taskId =
+            response.data.task_id
+
+        setProgressText(
+            "Queued for processing..."
+        )
+
+        const interval =
+            setInterval(async () => {
+
+                try {
+
+                    const taskResponse =
+                        await api.get(
+                            `/task/${taskId}`
+                        )
+
+                    const status =
+                        taskResponse.data.status
+
+                    console.log(
+                        status
+                    )
+
                     if (
-                socket &&
-                socket.readyState === WebSocket.OPEN
-            ) {
+                        status === "PENDING"
+                    ) {
 
-                socket.send(file.name)
+                        setProgressText(
+                            "Waiting in queue..."
+                        )
 
-            } else {
+                        setProgress(20)
+                    }
 
-                setErrorMessage(
-                    "WebSocket not connected"
-                )
-            }
+                    if (
+                        status === "STARTED"
+                    ) {
 
+                        setProgressText(
+                            "Separating audio..."
+                        )
 
+                        setProgress(60)
+                    }
 
+                    if (
+                        status === "SUCCESS"
+                    ) {
+
+                        clearInterval(
+                            interval
+                        )
+
+                        setProgress(100)
+
+                        setProgressText(
+                            "Completed"
+                        )
+                    const result =
+                        taskResponse.data.result
+
+                    if (
+                        result &&
+                        result.result &&
+                        result.result.stems
+                    ) {
+
+                        setStems(
+                            result.result.stems
+                        )
+
+                        localStorage.setItem(
+                            "stems",
+                            JSON.stringify(
+                                result.result.stems
+                            )
+                        )
+                    }
+
+                        setUploading(false)
+                    }
+
+                    if (
+                        status === "FAILURE"
+                    ) {
+
+                        clearInterval(
+                            interval
+                        )
+
+                        setErrorMessage(
+                            "Processing failed"
+                        )
+
+                        setUploading(false)
+                    }
+
+                } catch (err) {
+
+                    console.error(err)
+
+                    clearInterval(
+                        interval
+                    )
+
+                    setUploading(false)
+                }
+
+            }, 3000)
 
     } catch (error) {
-    console.error(error)
 
-    if (error.response) {
-
-        setErrorMessage(
-            "Backend error"
-        )
-
-    } else if (error.request) {
+        console.error(error)
 
         setErrorMessage(
-            "Server offline"
+            "Upload failed"
         )
 
-    } else {
-
-        setErrorMessage(
-            "Unexpected error"
-        )
+        setUploading(false)
     }
-
-    setUploading(false)
-}
-
-    
 }
     function handleLogout() {
 
