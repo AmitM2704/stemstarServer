@@ -1,6 +1,8 @@
 import os
 import subprocess
 import time
+import traceback
+import asyncio
 
 from fastapi import HTTPException
 
@@ -103,6 +105,11 @@ async def websocket_progress(
 
             # Receive filename
             filename = await websocket.receive_text()
+            if filename == "ping":
+
+                await websocket.send_text("pong")
+
+                continue
 
             print("Received:", filename)
 
@@ -137,33 +144,30 @@ async def websocket_progress(
                 text=True
             )
 
-            # Stream realtime logs
-            while True:
+        # Stream realtime logs
+            while process.poll() is None:
 
-                output = process.stdout.readline()
+                line = process.stdout.readline()
 
-                if (
-                    output == ""
-                    and
-                    process.poll() is not None
-                ):
-                    break
+                if line:
 
-                if output:
-
-                    line = output.strip()
+                    line = line.strip()
 
                     print(line)
 
-                    await websocket.send_text(
-                        line
-                    )
-            process.wait()
+                    await websocket.send_text(line)
+
+                await asyncio.sleep(0.1)
+
+            await asyncio.to_thread(
+                process.wait
+            )
+
             print(
                 "Demucs complete"
             )
-            time.sleep(1)
 
+            await asyncio.sleep(1)
             # Song name
             song_name = os.path.splitext(
                 filename
@@ -210,7 +214,7 @@ async def websocket_progress(
             "WebSocket Error:",
             e
         )
-
+        traceback.print_exc()
     finally:
 
         print(
