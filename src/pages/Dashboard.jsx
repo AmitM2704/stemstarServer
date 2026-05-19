@@ -188,7 +188,7 @@ useEffect(() => {
                     name: stem,
 
                     url:
-                    `https://stemstarserver-production.up.railway.app/stems/${songName}/${stem}`
+`https://stemstarserver-8.onrender.com/stems/${songName}/${stem}`
                 }))
 
         setStems(generated)
@@ -206,10 +206,11 @@ useEffect(() => {
 }
 
     async function handleUpload() {
-
+        
     if (!file) {
         return
     }
+    setErrorMessage("")
 
     setUploadedFilename(file.name)
 
@@ -267,80 +268,59 @@ useEffect(() => {
                         status
                     )
 
-                    if (
-                        status === "PENDING"
-                    ) {
+                    if (status === "processing") {
 
-                        setProgressText(
-                            "Waiting in queue..."
-                        )
+    setProgressText(
+        "Separating audio..."
+    )
 
-                        setProgress(20)
-                    }
+    setProgress(60)
+}
 
-                    if (
-                        status === "STARTED"
-                    ) {
+if (status === "completed") {
 
-                        setProgressText(
-                            "Separating audio..."
-                        )
+    clearInterval(interval)
 
-                        setProgress(60)
-                    }
+    setProgress(100)
 
-                    if (
-                        status === "SUCCESS"
-                    ) {
+    setProgressText(
+        "Completed"
+    )
 
-                        clearInterval(
-                            interval
-                        )
+    const stems =
+        taskResponse.data?.result?.stems
+        ||
+        taskResponse.data?.result
+        ||
+        []
 
-                        setProgress(100)
+    if (Array.isArray(stems)) {
 
-                        setProgressText(
-                            "Completed"
-                        )
-                    const result =
-                        taskResponse.data.result
+        setStems(stems)
 
-                    if (
-                        result &&
-                        result.result &&
-                        result.result.stems
-                    ) {
+        localStorage.setItem(
+            "stems",
+            JSON.stringify(stems)
+        )
+    }
 
-                        setStems(
-                            result.result.stems
-                        )
+    setUploading(false)
+}
 
-                        localStorage.setItem(
-                            "stems",
-                            JSON.stringify(
-                                result.result.stems
-                            )
-                        )
-                    }
+if (status === "failed") {
 
-                        setUploading(false)
-                    }
+    clearInterval(
+        interval
+    )
 
-                    if (
-                        status === "FAILURE"
-                    ) {
+    setErrorMessage(
+        taskResponse.data.error
+        ||
+        "Processing failed"
+    )
 
-                        clearInterval(
-                            interval
-                        )
-
-                        setErrorMessage(
-                            "Processing failed"
-                        )
-
-                        setUploading(false)
-                    }
-
+    setUploading(false)
+}
                 } catch (err) {
 
                     console.error(err)
