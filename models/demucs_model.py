@@ -11,22 +11,28 @@ class DemucsSeparator:
 
         cmd = [
 
-            "demucs",
+    "demucs",
 
-            "--name",
-            "mdx_extra_q",
+    "--name",
+    "mdx_extra_q",
 
-            "--segment",
-            "1",
+    "--segment",
+    "1",
 
-            "--jobs",
-            "1",
+    "--overlap",
+    "0.05",
 
-            "--device",
-            "cpu",
+    "--jobs",
+    "1",
 
-            input_file
-        ]
+    "--shifts",
+    "0",
+
+    "--device",
+    "cpu",
+
+    input_file
+]
 
         print(
             "Starting demucs"
