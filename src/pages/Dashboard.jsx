@@ -321,6 +321,20 @@ if (status === "failed") {
 
     setUploading(false)
 }
+if (status === "not_found") {
+
+    clearInterval(
+        interval
+    )
+
+    setErrorMessage(
+        "Task disappeared"
+    )
+
+    setUploading(
+        false
+    )
+}
                 } catch (err) {
 
                     console.error(err)
