@@ -5,7 +5,6 @@ from api.routes import router
 
 app = FastAPI()
 
-
 app.add_middleware(
     CORSMiddleware,
 
@@ -19,3 +18,5 @@ app.add_middleware(
 
     allow_headers=["*"],
 )
+
+app.include_router(router)
