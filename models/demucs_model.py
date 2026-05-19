@@ -12,23 +12,26 @@ class DemucsSeparator:
         )
 
         cmd = [
-            "demucs",
 
-            "--name",
-            "mdx_extra_q",
+"demucs",
 
-            "--segment",
-            "3",
+"--name",
+"mdx_extra_q",
 
-            "--jobs",
-            "1",
+"--segment",
+"2",
 
-            "--device",
-            "cpu",
+"--jobs",
+"1",
 
-            input_file
-        ]
+"--shifts",
+"1",
 
+"--device",
+"cpu",
+
+input_file
+]
         subprocess.run(
             cmd,
             check=True
