@@ -146,10 +146,15 @@ def get_task(
     task_id: str
 ):
 
+    print(
+        "jobs:",
+        jobs.keys()
+    )
+
     return jobs.get(
         task_id,
         {
-            "status": "not_found"
+            "status":"not_found"
         }
     )
 
