@@ -5,17 +5,54 @@ from fastapi import APIRouter
 from fastapi import UploadFile
 from fastapi import File
 from fastapi import Body
+from fastapi import BackgroundTasks
+
+from models.ensemble import (
+    EnsembleSeparator
+)
 
 from fastapi.responses import FileResponse
 
-from celery.result import AsyncResult
+# from celery.result import AsyncResult
 
-from workers.tasks import (
-    celery,
-    separate_song
-)
+# from workers.tasks import (
+#     celery,
+#     separate_song
+# )
+jobs = {}
+processing = False
 
 router = APIRouter()
+def process_job(
+    task_id,
+    file_path
+):
+
+    global processing
+
+    processing = True
+
+    try:
+
+        separator = EnsembleSeparator()
+
+        result = separator.process(
+            file_path
+        )
+
+        jobs[task_id] = {
+            "status": "completed",
+            "result": result
+        }
+
+    except Exception as e:
+
+        jobs[task_id] = {
+            "status": "failed",
+            "error": str(e)
+        }
+
+    processing = False
 
 UPLOAD_DIR = "uploads"
 
@@ -58,46 +95,63 @@ def home():
 # Upload endpoint
 @router.post("/upload")
 async def upload_audio(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...)
 ):
+
+    global processing
+
+    if processing:
+
+        raise HTTPException(
+            429,
+            "Server busy"
+        )
 
     save_path = os.path.join(
         UPLOAD_DIR,
         file.filename
     )
 
-    # Save uploaded file
-    with open(save_path, "wb") as f:
+    with open(
+        save_path,
+        "wb"
+    ) as f:
 
-        f.write(
-            await file.read()
-        )
+        while chunk := await file.read(
+            1024 * 1024
+        ):
+            f.write(chunk)
 
-    # Queue Celery task
-    job = separate_song.delay(save_path)
+    task_id = file.filename
 
-    return {
-        "status": "queued",
-        "task_id": job.id,
-        "filename": file.filename
+    jobs[task_id] = {
+        "status": "processing"
     }
 
-
-# Check task status
-@router.get("/task/{task_id}")
-def get_task(task_id: str):
-
-    task = AsyncResult(
+    background_tasks.add_task(
+        process_job,
         task_id,
-        app=celery
+        save_path
     )
 
     return {
-        "id": task.id,
-        "status": task.status,
-        "result": task.result,
+        "task_id": task_id
     }
+# Check task status
+@router.get(
+    "/task/{task_id}"
+)
+def get_task(
+    task_id: str
+):
 
+    return jobs.get(
+        task_id,
+        {
+            "status": "not_found"
+        }
+    )
 
 # Serve stem files
 @router.get(
