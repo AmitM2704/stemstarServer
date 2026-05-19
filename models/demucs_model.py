@@ -10,7 +10,6 @@ class DemucsSeparator:
     ):
 
         cmd = [
-
     "demucs",
 
     "--name",
@@ -38,13 +37,13 @@ class DemucsSeparator:
             "Starting demucs"
         )
 
-        result = subprocess.run(
+        subprocess.run(
             cmd,
-            capture_output=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
             text=True,
             timeout=600
         )
-
         print(
             "STDOUT:",
             result.stdout
