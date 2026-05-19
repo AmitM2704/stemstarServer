@@ -4,39 +4,61 @@ import os
 
 class DemucsSeparator:
 
-    def separate(self, input_file):
-
-        os.makedirs(
-            "separated",
-            exist_ok=True
-        )
+    def separate(
+        self,
+        input_file
+    ):
 
         cmd = [
 
-"demucs",
+            "demucs",
 
-"--name",
-"mdx_extra_q",
+            "--name",
+            "mdx_extra_q",
 
-"--segment",
-"2",
+            "--segment",
+            "1",
 
-"--jobs",
-"1",
+            "--jobs",
+            "1",
 
-"--shifts",
-"1",
+            "--device",
+            "cpu",
 
-"--device",
-"cpu",
+            input_file
+        ]
 
-input_file
-]
-        subprocess.run(
+        print(
+            "Starting demucs"
+        )
+
+        result = subprocess.run(
             cmd,
-            check=True
+            capture_output=True,
+            text=True,
+            timeout=600
+        )
+
+        print(
+            "STDOUT:",
+            result.stdout
+        )
+
+        print(
+            "STDERR:",
+            result.stderr
+        )
+
+        if result.returncode != 0:
+
+            raise Exception(
+                result.stderr
+            )
+
+        print(
+            "Demucs finished"
         )
 
         return {
-            "status": "done"
+            "stems":[]
         }
