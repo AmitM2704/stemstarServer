@@ -39,11 +39,15 @@ def process_job(
         result = separator.process(
             file_path
         )
-
+        
         jobs[task_id] = {
             "status": "completed",
             "result": result
         }
+        print(
+    "Completed:",
+    task_id
+)
 
     except Exception as e:
 
@@ -52,7 +56,16 @@ def process_job(
             "error": str(e)
         }
 
-    processing = False
+    finally:
+
+        if os.path.exists(
+            file_path
+        ):
+            os.remove(
+                file_path
+            )
+
+        processing = False
 
 UPLOAD_DIR = "uploads"
 
@@ -129,6 +142,15 @@ async def upload_audio(
         "status": "processing"
     }
 
+    print(
+        "Added job:",
+        task_id
+    )
+
+    print(
+        jobs
+    )
+
     background_tasks.add_task(
         process_job,
         task_id,
@@ -147,16 +169,25 @@ def get_task(
 ):
 
     print(
-        "jobs:",
-        jobs.keys()
+        "requested:",
+        task_id
     )
 
-    return jobs.get(
-        task_id,
-        {
-            "status":"not_found"
-        }
+    print(
+        "stored:",
+        list(
+            jobs.keys()
+        )
     )
+
+    if task_id in jobs:
+
+        return jobs[task_id]
+
+    return {
+        "status":"not_found"
+    }
+
 
 # Serve stem files
 @router.get(
@@ -174,4 +205,16 @@ async def get_stem(
         stem_name
     )
 
-    return FileResponse(file_path)
+    if not os.path.exists(
+        file_path
+    ):
+
+        raise HTTPException(
+            404,
+            "Stem not found"
+        )
+
+    return FileResponse(
+        file_path,
+        filename=stem_name
+)
